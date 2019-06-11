@@ -1,0 +1,11 @@
+(define (next-odd n)
+    (if (odd? n)
+        (+ 2 n)
+        (+ 1 n)))
+
+(define (test n count)
+    (display n)
+    (newline)
+    (if (< count 5)
+        (test (next-odd n) (+ count 1))
+        ))
