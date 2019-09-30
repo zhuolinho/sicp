@@ -102,25 +102,45 @@
     )
 )
 
-(define sample-tree
-    (make-code-tree
-        (make-leaf 'A 4)
-        (make-code-tree
-            (make-leaf 'B 2)
-            (make-code-tree
-                (make-leaf 'D 1)
-                (make-leaf 'C 1)
+(define (adjoin-set x set)
+    (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+            (adjoin-set x (cdr set)))
+        )
+    )
+)
+
+(define (make-leaf-set pairs)
+    (if (null? pairs)
+        '()
+        (let ((pair (car pairs)))
+            (adjoin-set 
+                (make-leaf (car pair) (cadr pair))
+                (make-leaf-set (cdr pairs))
             )
         )
     )
 )
 
-(define sample-message
-    '(0 1 1 0 0 1 0 1 0 1 1 1 0)
+(define (generate-huffman-tree pairs)
+    (successive-merge (make-leaf-set pairs))
 )
 
-(define sample
-    '(a d a b b c a)
+(define (successive-merge ordered-set)
+    (define (iter left right)
+        (if (null? left)
+            right
+            (iter (cdr left)
+                (make-code-tree (car left) right)
+            )
+        )
+    )
+    (if (= 0 (length ordered-set))
+        '()
+        (iter (cdr ordered-set) (car ordered-set))
+    )
 )
 
-(encode sample sample-tree)
+(generate-huffman-tree '((A 1) (B 2) (C 4) (D 8) (E 16)))
+
