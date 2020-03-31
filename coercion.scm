@@ -56,31 +56,55 @@
 (define put-coercion (coercion-table 'insert-proc!))
 
 (define (apply-generic op . args)
+    (define (match? type1 type-list)
+        (if (null? type-list)
+            true
+            (let ((type2 (car type-list)))
+                (if (or (equal? type1 type2) (get-coercion type2 type1))
+                    (match? type1 (cdr type-list))
+                    false
+                )
+            )
+        )
+    )
+    (define (convert type1 arg-list)
+        (if (null? arg-list)
+            '()
+            (let ((type2 (type-tag (car arg-list))))
+                (if (equal? type1 type2)
+                    (cons (car arg-list) (convert type1 (cdr arg-list)))
+                    (cons ((get-coercion type2 type1) (car arg-list)) (convert type1 (cdr arg-list)))
+                )
+            )
+        )
+    )
+    (define (available-type type type-left type-right)
+        (cond 
+            (match? type (append type-left type-right) type)
+            ((null? type-right) false)
+            (else (available-type (car type-right) (cons type type-left) (cdr type-right)))
+        )
+    )
+    (define (same-type? type-list)
+        (cond 
+            ((null? type-list) true)
+            ((null? (cdr type-list)) true)
+            ((equal? (car type-list) (cadr type-list)) (same-type? (cdr type-list)))
+            (else false)
+        )
+    )
     (let ((type-tags (map type-tag args)))
         (let ((proc (get op type-tags)))
-            (if proc
-                (apply proc (map contents args))
-                (if (= (length args) 2)
-                    (let ((type1 (car type-tags))
-                          (type2 (cadr type-tags))
-                          (a1 (car args))
-                          (a2 (cadr args)))
-                        (if (equal? type1 type2)
-                            (error "No method for equal types" (list op type-tags))
-                            (let ((t1->t2 (get-coercion type1 type2))
-                                  (t2->t1 (get-coercion type2 type1)))
-                                (cond
-                                    (t1->t2
-                                        (apply-generic op (t1->t2 a1) a2))
-                                    (t2->t1
-                                        (apply-generic op a1 (t2->t1 a2)))
-                                    (else
-                                        (error "No method for these types" (list op type-tags)))
-                                )
-                            )
+            (cond 
+                (proc (apply proc (map contents args)))
+                ((same-type? type-tags) (error "No method for equal types" (list op type-tags)))
+                (else
+                    (let ((type (available-type (car type-tags) '() (cdr type-tags))))
+                        (if type
+                            (apply apply-generic (cons op (convert type args)))
+                            (error "No method for these types" (list op type-tags))
                         )
                     )
-                    (error "Need 2 args" (list op type-tags))
                 )
             )
         )
@@ -123,8 +147,15 @@
     ((get 'make 'scheme-number) n)
 )
 
-(define (scheme-number->scheme-number n) n)
-(put-coercion 'scheme-number 'scheme-number scheme-number->scheme-number)
+(define (make-number n)
+    (attach-tag 'number n)
+)
+
+(define (number->scheme-number n) (make-scheme-number (contents n)))
+(put-coercion 'number 'scheme-number number->scheme-number)
+
+(define (scheme-number->number n) (make-number (contents n)))
+(put-coercion 'scheme-number 'number scheme-number->number)
 
 (install-scheme-number-package)
-(apply-generic 'exp (make-scheme-number 3) (make-scheme-number 2))
+(apply-generic 'exp (make-number 2) (make-scheme-number 3))
