@@ -160,6 +160,9 @@
     (put 'make 'scheme-number
         (lambda (x) (tag x))
     )
+    (put 'raise '(scheme-number)
+        (lambda (n) (make-complex-from-real-imag n 0))
+    )
     'done
 )
 (define (make-scheme-number n)
@@ -217,10 +220,13 @@
     (put 'make 'rational
         (lambda (n d) (tag (make-rat n d)))
     )
+    (put 'raise '(rational)
+        (lambda (r) (make-scheme-number (/ (numer r) (denom r))))
+    )
     'done
 )
 (define (make-rational n d)
-    ((get 'make 'scheme-number) n d)
+    ((get 'make 'rational) n d)
 )
 
 (define (install-complex-package)
@@ -360,6 +366,8 @@
 (define (make-from-real-imag x y)
     ((get 'make-from-real-imag 'rectangular) x y))
 
+(define (raise x) (apply-generic 'raise x))
+
 (define (add x y) (apply-generic 'add x y))
 (define (sub x y) (apply-generic 'sub x y))
 (define (mul x y) (apply-generic 'mul x y))
@@ -375,4 +383,4 @@
 (install-rectangular-package)
 (install-polar-package)
 (install-complex-package)
-(magnitude (make-complex-from-real-imag 3 4))
+(raise (raise (make-rational 3 4)))
