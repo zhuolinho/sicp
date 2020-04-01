@@ -93,13 +93,23 @@
             (else false)
         )
     )
+    (define (find-available type type-left type-right)
+        (let ((type (available-type type type-left type-right)))
+            (cond 
+                ((not type) type)
+                ((get op (map (lambda (_) type) args)) type)
+                ((null? type-right) false)
+                (else (find-available (car type-right) (cons type type-left) (cdr type-right)))
+            )
+        )
+    )
     (let ((type-tags (map type-tag args)))
         (let ((proc (get op type-tags)))
             (cond 
                 (proc (apply proc (map contents args)))
                 ((same-type? type-tags) (error "No method for equal types" (list op type-tags)))
                 (else
-                    (let ((type (available-type (car type-tags) '() (cdr type-tags))))
+                    (let ((type (find-available (car type-tags) '() (cdr type-tags))))
                         (if type
                             (apply apply-generic (cons op (convert type args)))
                             (error "No method for these types" (list op type-tags))
