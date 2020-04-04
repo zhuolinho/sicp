@@ -107,9 +107,6 @@
     )
     'done
 )
-(define (make-scheme-number n)
-    ((get 'make 'scheme-number) n)
-)
 
 (define (install-polynomial-package)
     (define (make-poly variable term-list)
@@ -156,6 +153,22 @@
         )
     )
 
+    (define (mul-terms L1 L2)
+        (if (empty-termlist? L1)
+            (the-empty-termlist)
+            (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                (mul-terms (rest-terms L1) L2)
+            )))
+    (define (mul-term-by-all-terms t1 L)
+        (if (empty-termlist? L)
+            (the-empty-termlist)
+            (let ((t2 (first-term L)))
+                (adjoin-term
+                    (make-term (+ (order t1) (order t2))
+                        (mul (coeff t1) (coeff t2)))
+                    (mul-term-by-all-terms t1 (rest-terms L)))
+            )))
+
     (define (add-poly p1 p2)
         (if (same-variable? (variable p1) (variable p2))
             (make-poly (variable p1)
@@ -177,6 +190,9 @@
         (lambda (p1 p2) (tag (mul-poly p1 p2))))
     (put 'make 'polynomial
         (lambda (var terms) (tag (make-poly var terms))))
+    (put '=zero? '(polynomial)
+        (lambda (value) (empty-termlist? (term-list value)))
+    )
 'done)
 
 (define (add x y) (apply-generic 'add x y))
@@ -187,8 +203,18 @@
 
 (install-scheme-number-package)
 (install-polynomial-package)
+(define (make-scheme-number n)
+    ((get 'make 'scheme-number) n)
+)
 (define (make-polynomial var terms)
-    ((get 'make 'polynomial) var terms))
+    ((get 'make 'polynomial) var terms)
+)
 
-(add (make-polynomial 'x (list (list 3 (make-scheme-number 1)) (list 2 (make-scheme-number 5)) (list 1 (make-scheme-number 4)))) 
-    (make-polynomial 'x (list (list 5 (make-scheme-number 1)) (list 4 (make-scheme-number 3)) (list 3 (make-scheme-number 2)))))
+(define a (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+(define b (make-polynomial 'y (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+(define c (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
+(define d (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -2)))))
+(define e (make-polynomial 'y (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 7)))))
+
+(mul (make-polynomial 'x (list (list 2 a) (list 1 b) (list 0 c)))
+    (make-polynomial 'x (list (list 1 d) (list 0 e))))
