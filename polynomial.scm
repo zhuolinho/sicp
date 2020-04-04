@@ -105,6 +105,9 @@
     (put '=zero? '(scheme-number)
         (lambda (value) (= value 0))
     )
+    (put 'negate '(scheme-number)
+        (lambda (x) (tag (- x)))
+    )
     'done
 )
 
@@ -125,6 +128,11 @@
     (define (make-term order coeff) (list order coeff))
     (define (order term) (car term))
     (define (coeff term) (cadr term))
+
+    (define (negate-terms p)
+        (map (lambda (term)
+            (make-term (order term) (negate (coeff term)))
+        ) p))
 
     (define (add-terms L1 L2)
         (cond
@@ -186,6 +194,8 @@
 
     (define (tag p) (attach-tag 'polynomial p))
     (put 'add '(polynomial polynomial) (lambda (p1 p2) (tag (add-poly p1 p2))))
+    (put 'sub '(polynomial polynomial)
+        (lambda (p1 p2) (tag (add-poly p1 (make-poly (variable p2) (negate-terms (term-list p2)))))))
     (put 'mul '(polynomial polynomial)
         (lambda (p1 p2) (tag (mul-poly p1 p2))))
     (put 'make 'polynomial
@@ -193,6 +203,8 @@
     (put '=zero? '(polynomial)
         (lambda (value) (empty-termlist? (term-list value)))
     )
+    (put 'negate '(polynomial)
+        (lambda (p) (tag (make-poly (variable p) (negate-terms (term-list p))))))
 'done)
 
 (define (add x y) (apply-generic 'add x y))
@@ -200,6 +212,7 @@
 (define (mul x y) (apply-generic 'mul x y))
 (define (div x y) (apply-generic 'div x y))
 (define (=zero? x) (apply-generic '=zero? x))
+(define (negate x) (apply-generic 'negate x))
 
 (install-scheme-number-package)
 (install-polynomial-package)
@@ -216,5 +229,5 @@
 (define d (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -2)))))
 (define e (make-polynomial 'y (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 7)))))
 
-(mul (make-polynomial 'x (list (list 2 a) (list 1 b) (list 0 c)))
+(add (make-polynomial 'x (list (list 2 a) (list 1 b) (list 0 c)))
     (make-polynomial 'x (list (list 1 d) (list 0 e))))
