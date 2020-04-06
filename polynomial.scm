@@ -112,10 +112,13 @@
 )
 
 (define (install-rational-package)
+    (define (make x)
+        (cons (car x) (cons (cadr x) (caddr x))))
     (define (numer x) (car x))
     (define (denom x) (cdr x))
     (define (make-rat n d)
-        (cons n d)
+        (let ((g (greatest-common-divisor n d)))
+            (cons (make (div n g)) (make (div d g))))
     )
     (define (add-rat x y)
         (make-rat
@@ -215,6 +218,11 @@
                                 (list (cons (make-term new-o new-c) (car result))
                                     (cadr result)))
                         ))))))
+    (define (gcd-terms a b)
+        (if (empty-termlist? b)
+            a
+            (gcd-terms b (remainder-terms a b))))
+    (define (remainder-terms a b) (cadr (div-terms a b)))
 
     (define (add-poly p1 p2)
         (if (same-variable? (variable p1) (variable p2))
@@ -229,7 +237,7 @@
                 (mul-terms (term-list p1)
                     (term-list p2)))
             (error "Polys not in same var -- MUL-POLY" (list p1 p2)))
-        )
+    )
     (define (div-poly p1 p2)
         (if (same-variable? (variable p1) (variable p2))
             (if (empty-termlist? (term-list p2))
@@ -237,7 +245,14 @@
                 (make-poly (variable p1)
                     (div-terms (term-list p1)(term-list p2))))
             (error "Polys not in same var -- DIV-POLY" (list p1 p2)))
-        )
+    )
+    (define (gcd-poly p1 p2)
+        (if (same-variable? (variable p1) (variable p2))
+            (make-poly (variable p1)
+                (gcd-terms (term-list p1)
+                    (term-list p2)))
+            (error "Polys not in same var -- GCD-POLY" (list p1 p2)))
+    )
 
     (define (tag p) (attach-tag 'polynomial p))
     (put 'add '(polynomial polynomial) (lambda (p1 p2) (tag (add-poly p1 p2))))
@@ -254,6 +269,8 @@
         (lambda (p) (tag (make-poly (variable p) (negate-terms (term-list p))))))
     (put 'div '(polynomial polynomial) 
         (lambda (p1 p2) (tag (div-poly p1 p2))))
+    (put 'greatest-common-divisor  '(polynomial polynomial) 
+        (lambda (p1 p2) (tag (gcd-poly p1 p2))))
 'done)
 
 (define (add x y) (apply-generic 'add x y))
@@ -262,6 +279,7 @@
 (define (div x y) (apply-generic 'div x y))
 (define (=zero? x) (apply-generic '=zero? x))
 (define (negate x) (apply-generic 'negate x))
+(define (greatest-common-divisor x y) (apply-generic 'greatest-common-divisor x y))
 
 (install-scheme-number-package)
 (install-polynomial-package)
@@ -275,13 +293,27 @@
     ((get 'make 'polynomial) var terms)
 )
 
-(define a (make-polynomial 'y (list (list 5 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
-(define b (make-polynomial 'y (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
-(define c (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
-(define d (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -2)))))
-(define e (make-polynomial 'y (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 7)))))
+; (define a (make-polynomial 'y (list (list 5 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
+; (define b (make-polynomial 'y (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
+; (define c (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -1)))))
+; (define d (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -2)))))
+; (define e (make-polynomial 'y (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 7)))))
 
-(define p1 (make-polynomial 'x (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
-(define p2 (make-polynomial 'x (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+; (define p1 (make-polynomial 'x (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+; (define p2 (make-polynomial 'x (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
 
-(define rf (make-rational p2 p1))
+; (define rf (make-rational p2 p1))
+
+; (define p1 (make-polynomial 'x  (list (list 4 (make-scheme-number 1)) (list 3 (make-scheme-number -1)) (list 2 (make-scheme-number -2)) (list 1 (make-scheme-number 2)))))
+; (define p2 (make-polynomial 'x (list (list 3 (make-scheme-number 1)) (list 1 (make-scheme-number -1)))))
+; (define rf (make-rational p1 p2))
+; (greatest-common-divisor p1 p2)
+
+(define p1 (make-polynomial 'x (list (list 2 (make-scheme-number 1)) (list 1 (make-scheme-number -2)) (list 0 (make-scheme-number 1)))))
+(define p2 (make-polynomial 'x (list (list 2 (make-scheme-number 11)) (list 0 (make-scheme-number 7)))))
+(define p3 (make-polynomial 'x (list (list 1 (make-scheme-number 13)) (list 0 (make-scheme-number 5)))))
+
+(define q1 (mul p1 p2))
+(define q2 (mul p1 p3))
+
+(greatest-common-divisor q1 q2)
