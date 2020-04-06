@@ -111,6 +111,31 @@
     'done
 )
 
+(define (install-rational-package)
+    (define (numer x) (car x))
+    (define (denom x) (cdr x))
+    (define (make-rat n d)
+        (cons n d)
+    )
+    (define (add-rat x y)
+        (make-rat
+            (add (mul (numer x) (denom y)) (mul (numer y) (denom x)))
+            (mul (denom x) (denom y))
+        )
+    )
+
+    (define (tag x)
+        (attach-tag 'rational x)
+    )
+    (put 'add '(rational rational)
+        (lambda (x y) (tag (add-rat x y)))
+    )
+    (put 'make 'rational
+        (lambda (n d) (tag (make-rat n d)))
+    )
+    'done
+)
+
 (define (install-polynomial-package)
     (define (make-poly variable term-list)
         (cons variable term-list))
@@ -240,9 +265,12 @@
 
 (install-scheme-number-package)
 (install-polynomial-package)
+(install-rational-package)
 (define (make-scheme-number n)
     ((get 'make 'scheme-number) n)
 )
+(define (make-rational n d)
+    ((get 'make 'rational) n d))
 (define (make-polynomial var terms)
     ((get 'make 'polynomial) var terms)
 )
@@ -253,5 +281,7 @@
 (define d (make-polynomial 'y (list (list 1 (make-scheme-number 1)) (list 0 (make-scheme-number -2)))))
 (define e (make-polynomial 'y (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 7)))))
 
-(div (make-polynomial 'x (list (list 2 a) (list 1 b) (list 0 c)))
-    (make-polynomial 'x (list (list 1 d) (list 0 e))))
+(define p1 (make-polynomial 'x (list (list 2 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+(define p2 (make-polynomial 'x (list (list 3 (make-scheme-number 1)) (list 0 (make-scheme-number 1)))))
+
+(define rf (make-rational p2 p1))
