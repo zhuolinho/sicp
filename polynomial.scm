@@ -111,34 +111,6 @@
     'done
 )
 
-(define (install-rational-package)
-    (define (make x)
-        (cons (car x) (cons (cadr x) (caddr x))))
-    (define (numer x) (car x))
-    (define (denom x) (cdr x))
-    (define (make-rat n d)
-        (let ((g (greatest-common-divisor n d)))
-            (cons (make (div n g)) (make (div d g))))
-    )
-    (define (add-rat x y)
-        (make-rat
-            (add (mul (numer x) (denom y)) (mul (numer y) (denom x)))
-            (mul (denom x) (denom y))
-        )
-    )
-
-    (define (tag x)
-        (attach-tag 'rational x)
-    )
-    (put 'add '(rational rational)
-        (lambda (x y) (tag (add-rat x y)))
-    )
-    (put 'make 'rational
-        (lambda (n d) (tag (make-rat n d)))
-    )
-    'done
-)
-
 (define (install-polynomial-package)
     (define (make-poly variable term-list)
         (cons variable term-list))
@@ -222,7 +194,46 @@
         (if (empty-termlist? b)
             a
             (gcd-terms b (remainder-terms a b))))
-    (define (remainder-terms a b) (cadr (div-terms a b)))
+    (define (remainder-terms a b) (cadr (div-terms 
+        (map 
+            (lambda (x) (list 
+                (car x)
+                (mul 
+                    (cadr x) 
+                    (make-scheme-number (expt 
+                        (cdr (coeff (car b))) 
+                        (- (+ 1 (order (car a))) (order (car b))))))))
+            a)
+        b)))
+    (define (rational-terms a b)
+        (define (mul-param term-list param)
+            (map
+                (lambda (x) (list
+                    (car x)
+                    (mul (cadr x) (make-scheme-number param))))
+                term-list))
+        (define (get-coeffs term-list)
+            (map (lambda (x) (cdr (cadr x))) term-list))
+        (let ((g (gcd-terms a b)))
+            (let ((p (expt 
+                (cdr (coeff (car g)))
+                (- 
+                    (+ 1 (max
+                        (order (car a))
+                        (order (car b))))
+                    (order (car g))))))
+                (let ((a1 (mul-param a p)) (b1 (mul-param b p)))
+                    (let ((a2 (car (div-terms a1 g))) (b2 (car (div-terms b1 g))))
+                        (let ((divisor (apply gcd (append (get-coeffs a2) (get-coeffs b2)))))
+                            (list
+                                (mul-param a2 (/ 1 divisor))
+                                (mul-param b2 (/ 1 divisor)))
+                        )
+                    )
+                )
+            )
+        )
+    )
 
     (define (add-poly p1 p2)
         (if (same-variable? (variable p1) (variable p2))
@@ -253,6 +264,13 @@
                     (term-list p2)))
             (error "Polys not in same var -- GCD-POLY" (list p1 p2)))
     )
+    (define (rational-poly p1 p2)
+        (if (same-variable? (variable p1) (variable p2))
+            (make-poly (variable p1)
+                (rational-terms (term-list p1)
+                    (term-list p2)))
+            (error "Polys not in same var -- RATIONAL-POLY" (list p1 p2)))
+    )
 
     (define (tag p) (attach-tag 'polynomial p))
     (put 'add '(polynomial polynomial) (lambda (p1 p2) (tag (add-poly p1 p2))))
@@ -271,6 +289,8 @@
         (lambda (p1 p2) (tag (div-poly p1 p2))))
     (put 'greatest-common-divisor  '(polynomial polynomial) 
         (lambda (p1 p2) (tag (gcd-poly p1 p2))))
+    (put 'rational  '(polynomial polynomial) 
+        (lambda (p1 p2) (tag (rational-poly p1 p2))))
 'done)
 
 (define (add x y) (apply-generic 'add x y))
@@ -280,15 +300,13 @@
 (define (=zero? x) (apply-generic '=zero? x))
 (define (negate x) (apply-generic 'negate x))
 (define (greatest-common-divisor x y) (apply-generic 'greatest-common-divisor x y))
+(define (rational x y) (apply-generic 'rational x y))
 
 (install-scheme-number-package)
 (install-polynomial-package)
-(install-rational-package)
 (define (make-scheme-number n)
     ((get 'make 'scheme-number) n)
 )
-(define (make-rational n d)
-    ((get 'make 'rational) n d))
 (define (make-polynomial var terms)
     ((get 'make 'polynomial) var terms)
 )
@@ -316,4 +334,4 @@
 (define q1 (mul p1 p2))
 (define q2 (mul p1 p3))
 
-(greatest-common-divisor q1 q2)
+(rational q1 q2)
