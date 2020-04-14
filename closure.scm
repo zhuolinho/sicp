@@ -45,8 +45,17 @@
                 (else (error "Unknow request -- MAKE-ACCOUNT" m))))
         dispatch
     ))
+(define (make-joint account old-pwd new-pwd)
+    (lambda (pwd m)
+        (if (eq? new-pwd pwd)
+            (account old-pwd m)
+            display-wrong-another-password-message)
+    ))
 
-(define acc (make-account 100 'secret-password))
+(define (display-wrong-another-password-message _)
+    (display "Incorrect another password"))
+(define peter-acc (make-account 100 'open-sesame))
+(define paul-acc (make-joint peter-acc 'open-sesame 'rosebud))
 
 (define (random-in-range low high)
     (let ((range (- high low)))
@@ -67,3 +76,27 @@
     (monte-carlo trials (lambda () 
         (p (random-in-range x1 x2) (random-in-range y1 y2))
     )))
+
+(define (fn)
+    (let ((last 0))
+        (lambda (x) (set! last x))))
+(define f (fn))
+(+ (f 0) (f 1))
+
+(define (make-cycle x)
+    (set-cdr! (last-pair x) x)
+    x)
+
+(define (count-pairs x)
+    (define (inner y memo-list)
+        (cond 
+            ((not (pair? y)) memo-list)
+            ((memq y memo-list) memo-list)
+            (else 
+                (inner (car y) 
+                    (inner (cdr y) (cons y memo-list)))
+            )))
+    (length (inner x '())))
+
+(define x '((a) b c))
+(count-pairs (cons x x))
