@@ -98,5 +98,28 @@
             )))
     (length (inner x '())))
 
+(define (cycle? x)
+    (define (inner y memo-list)
+        (cond 
+            ((not (pair? y)) #f)
+            ((memq y memo-list) #t)
+            (else (inner (cdr y) (cons y memo-list)))))
+    (inner x '()))
+
 (define x '((a) b c))
-(count-pairs (cons x x))
+
+(define (loop? lst)
+    (define (step2 x)
+        (cond 
+            ((null? x) x)
+            ((null? (cdr x)) (cdr x))
+            (else (cdr (cdr x)))))
+    (define (iter x y)
+        (let ((step (step2 y)))
+            (cond 
+                ((null? step) #f)
+                ((eq? step (cdr x)) #t)
+                (else (iter (cdr x) step)))))
+    (iter lst lst))
+
+(loop? (make-cycle x))
