@@ -41,14 +41,22 @@
 
         dispatch))
 
-(define (lookup key-1 key-2 table)
-    (let ((subtable (assoc key-1 (cdr table))))
-        (if subtable
-            (let ((record (assoc key-2 (cdr subtable))))
-                (if record
-                    (cdr record)
-                    false))
-            false)))
+(define (lookup keys table)
+    ; (let ((subtable (assoc key-1 (cdr table))))
+    ;     (if subtable
+    ;         (let ((record (assoc key-2 (cdr subtable))))
+    ;             (if record
+    ;                 (cdr record)
+    ;                 false))
+    ;         false)))
+    (if (list? keys)
+        (if (null? keys)
+            (cdr table)
+            (let ((subtable (assoc (car keys) (cdr table))))
+                (if subtable
+                    (lookup (cdr keys) subtable)
+                    false)))
+        (lookup (list keys) table)))
 
 (define (insert! key-1 key-2 value table)
     (let ((subtable (assoc key-1 (cdr table))))
@@ -71,4 +79,6 @@
 
 (define t (make-table))
 (insert! 'abc 'cde 123 t)
-(lookup 'abc 'cde t)
+(insert! 'abc 'fer 456 t)
+(insert! 'awe 'fwe 789 t)
+(lookup (list 'abc) t)
