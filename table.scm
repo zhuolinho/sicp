@@ -70,20 +70,29 @@
                     (symbol->string y)))
 
 (define (make-table compare)
-    (define (adjoin-set x set)
-        (let ((result (compare x (entry set))))
-            (cond 
-                ((= 0 result) set)
-                ((= -1 result)
-                    (make-tree (entry set)
-                        (adjoin-set x (left-branch set))
-                        (right-branch set)))
-                ((= 1 result)
-                    (make-tree (entry set)
-                        (left-branch set)
-                        (adjoin-set x (right-branch set)))))))
+    (define (make-entry k v) (cons k v))
+    (define (key e) (car e))
+    (define (value e) (cdr e))
+    (define (set-value! e v) (set-cdr! e v))
 
-    (let ((local-table (list '*table*)))
+    (define (adjoin-set x v set)
+        (if (null? set)
+            (make-tree (make-entry x v) '() '())
+            (let ((result (compare x (key (entry set)))))
+                (cond
+                    ((= 0 result)
+                        (set-value! (entry set) v)
+                        set)
+                    ((= -1 result)
+                        (make-tree (entry set)
+                            (adjoin-set x v (left-branch set))
+                            (right-branch set)))
+                    ((= 1 result)
+                        (make-tree (entry set)
+                            (left-branch set)
+                            (adjoin-set x v (right-branch set))))))))
+
+    (let ((local-table (list)))
         (define (lookup key-1 key-2)
             (let ((subtable (assoc key-1 (cdr local-table))))
                 (if subtable
@@ -93,30 +102,29 @@
                             false))
                     false)))
 
-        (define (insert! key-1 key-2 value)
-            (let ((subtable (assoc key-1 (cdr local-table))))
-                (if subtable
-                    (let ((record (assoc key-2 (cdr subtable))))
-                        (if record
-                            (set-cdr! record value)
-                            (set-cdr! subtable
-                                (cons
-                                    (cons key-2 value)
-                                    (cdr subtable)))))
-                    (set-cdr! local-table
-                        (cons
-                            (list
-                                key-1
-                                (cons key-2 value))
-                            (cdr local-table)))))
+        (define (insert! key value)
+            (set! local-table (adjoin-set key value local-table))
             'ok)
 
         (define (dispatch m)
             (cond 
-                ((eq? m 'lookup-proc) lookup)
-                ((eq? m 'insert-proc!) insert!)
+                ((eq? m 'lookup) lookup)
+                ((eq? m 'insert!) insert!)
+                ((eq? m 'table) local-table)
                 (else (error "Unknow operation -- TABLE" m))))
 
         dispatch))
 
 (define t (make-table compare-symbol))
+((t 'insert!) 'peter 10086)
+((t 'insert!) 'b 'b)
+((t 'insert!) 'a 'a)
+((t 'insert!) 'z 'z)
+((t 'insert!) 'f 'f)
+((t 'insert!) 'd 'd)
+((t 'insert!) 'e 'e)
+((t 'insert!) 'p 'p)
+((t 'insert!) 'g 'g)
+((t 'insert!) 's 's)
+((t 'insert!) 'f 'abc)
+(t 'table)
