@@ -83,24 +83,27 @@
                     ((= 0 result)
                         (set-value! (entry set) v)
                         set)
-                    ((= -1 result)
+                    ((< 0 result)
                         (make-tree (entry set)
                             (adjoin-set x v (left-branch set))
                             (right-branch set)))
-                    ((= 1 result)
+                    (else
                         (make-tree (entry set)
                             (left-branch set)
                             (adjoin-set x v (right-branch set))))))))
+    
+    (define (lookup-set k set)
+        (if (null? set)
+            false
+            (let ((result (compare k (key (entry set)))))
+                (cond 
+                    ((= 0 result) (value (entry set)))
+                    ((< 0 result) (lookup-set k (left-branch set)))
+                    (else (lookup-set k (right-branch set)))))))
 
     (let ((local-table (list)))
-        (define (lookup key-1 key-2)
-            (let ((subtable (assoc key-1 (cdr local-table))))
-                (if subtable
-                    (let ((record (assoc key-2 (cdr subtable))))
-                        (if record
-                            (cdr record)
-                            false))
-                    false)))
+        (define (lookup key)
+            (lookup-set key local-table))
 
         (define (insert! key value)
             (set! local-table (adjoin-set key value local-table))
@@ -127,4 +130,4 @@
 ((t 'insert!) 'g 'g)
 ((t 'insert!) 's 's)
 ((t 'insert!) 'f 'abc)
-(t 'table)
+((t 'lookup) 'f)
