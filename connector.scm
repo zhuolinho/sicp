@@ -101,6 +101,14 @@
     (connect connector me)
     me)
 
+(define (constant value connector)
+    (define (me request)
+        (error "Unknown request -- CONSTANT" request))
+    
+    (connect connector me)
+    (set-value! connector value me)
+    me)
+
 (define (adder a1 a2 sum)
     (define (process-new-value)
         (cond 
@@ -165,13 +173,19 @@
     (connect product me)
     me)
 
+(define (averager a1 a2 avg)
+    (let ((sum (make-connector)) (d (make-connector)))
+        (adder a1 a2 sum)
+        (multiplier d sum avg)
+        (constant (/ 1 2) d)))
+
 (define a (make-connector))
 (define b (make-connector))
 (define c (make-connector))
 (probe "a" a)
 (probe "b" b)
 (probe "c" c)
-(multiplier a b c)
+(averager a b c)
 (set-value! a 2 'user)
 (set-value! b 4 'user)
 (get-value c)
