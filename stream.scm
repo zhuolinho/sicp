@@ -1,21 +1,21 @@
-(define (memo-proc proc)
-    (let ((already-run? false) (result false))
-        (lambda () 
-            (if (not already-run?)
-                (begin
-                    (set! result (proc))
-                    (set! already-run? true)
-                    result)
-                result))))
+; (define (memo-proc proc)
+;     (let ((already-run? false) (result false))
+;         (lambda () 
+;             (if (not already-run?)
+;                 (begin
+;                     (set! result (proc))
+;                     (set! already-run? true)
+;                     result)
+;                 result))))
 
-(define (delay exp)
-    (memo-proc (lambda () exp)))
+; (define (delay exp)
+;     (memo-proc (lambda () exp)))
 
-(define (force delayed-object)
-    (delayed-object))
+; (define (force delayed-object)
+;     (delayed-object))
 
-(define (cons-stream a b)
-    (cons a (delay b)))
+; (define (cons-stream a b)
+;     (cons a (delay b)))
 
 (define (stream-car stream)
     (car stream))
@@ -75,3 +75,28 @@
 ; (define one-to-ten (stream-enumerate-interval 1 10))
 ; (stream-map + one-to-ten one-to-ten)
 ; (display-stream (stream-map + one-to-ten one-to-ten))
+
+(define (stream-filter pred stream)
+    (cond 
+        ((stream-null? stream)
+            the-empty-stream)
+        ((pred (stream-car stream)) 
+            (cons-stream
+                (stream-car stream)
+                (stream-filter pred (stream-cdr stream))))
+        (else 
+            (stream-filter pred (stream-cdr stream)))))
+
+(define sum 0)
+(define (accum x)
+    (set! sum (+ x sum))
+    sum)
+(define seq (stream-map accum
+    (stream-enumerate-interval 1 20)))
+(define y (stream-filter even? seq))
+(define z (stream-filter
+    (lambda (x) (= (remainder x 5) 0))
+    seq))
+
+(stream-ref y 7)
+(display-stream z)
