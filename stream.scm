@@ -39,12 +39,39 @@
     (display x)
     x)
 
-(define (stream-map proc s)
-    (if (stream-null? s)
+; (define (stream-map proc s)
+;     (if (stream-null? s)
+;         the-empty-stream
+;         (cons-stream
+;             (proc (stream-car s))
+;             (stream-map proc (stream-cdr s)))))
+
+(define (stream-map proc . argstreams)
+    (if (stream-null? (car argstreams))
         the-empty-stream
         (cons-stream
-            (proc (stream-car s))
-            (stream-map proc (stream-cdr s)))))
+            (apply proc (map stream-car argstreams))
+            (apply stream-map (cons
+                proc
+                (map stream-cdr argstreams))))))
 
-(define x (stream-map show (stream-enumerate-interval 0 10)))
-(stream-ref x 5)
+; (define x (stream-map show (stream-enumerate-interval 0 10)))
+; (stream-ref x 5)
+
+(define (stream-for-each proc s)
+    (if (stream-null? s)
+        'done
+        (begin
+            (proc (stream-car s))
+            (stream-for-each proc (stream-cdr s)))))
+
+(define (display-line x)
+    (newline)
+    (display x))
+
+(define (display-stream s)
+    (stream-for-each display-line s))
+
+; (define one-to-ten (stream-enumerate-interval 1 10))
+; (stream-map + one-to-ten one-to-ten)
+; (display-stream (stream-map + one-to-ten one-to-ten))
