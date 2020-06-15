@@ -98,5 +98,21 @@
     (lambda (x) (= (remainder x 5) 0))
     seq))
 
-(stream-ref y 7)
-(display-stream z)
+; (stream-ref y 7)
+; (display-stream z)
+
+(define ones (cons-stream 1 ones))
+
+(define (add-streams s1 s2)
+    (stream-map + s1 s2))
+
+(define integers (cons-stream 1 (add-streams ones integers)))
+
+(define s (cons-stream 1 (add-streams s s)))
+
+(define (mul-streams s1 s2)
+    (stream-map * s1 s2))
+
+(define factorials (cons-stream 1 (mul-streams factorials integers)))
+
+(stream-head factorials 10)
