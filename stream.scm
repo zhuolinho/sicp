@@ -115,4 +115,10 @@
 
 (define factorials (cons-stream 1 (mul-streams factorials integers)))
 
-(stream-head factorials 10)
+(define (partial-sums s)
+    (define self
+        (cons-stream (stream-car s) 
+            (add-streams self (stream-cdr s))))
+    self)
+
+(stream-head (partial-sums integers) 10000)
