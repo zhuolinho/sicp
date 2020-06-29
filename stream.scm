@@ -139,4 +139,21 @@
 
 (define S (cons-stream 1 (merge (scale-stream S 2) (merge (scale-stream S 3) (scale-stream S 5)))))
 
-(stream-head S 40000)
+(define n-ones (cons-stream -1 n-ones))
+
+(define (integrate-series series)
+    (define (iter stream n)
+        (cons-stream (/ (stream-car stream) n)
+            (iter (stream-cdr stream) (+ n 1))))
+    (iter series 1))
+
+(define exp-series
+    (cons-stream 1 (integrate-series exp-series)))
+
+(define cosine-series
+    (cons-stream 1 (mul-streams (integrate-series sine-series) n-ones)))
+
+(define sine-series
+    (cons-stream 0 (integrate-series cosine-series)))
+
+(stream-head sine-series 10)
