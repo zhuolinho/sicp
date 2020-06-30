@@ -175,9 +175,16 @@
                 -1)))
     self)
 
-(define abc (reciprocal-series sine-series))
+(define (div-series s1 s2)
+    (let ((factor (stream-car s2)))
+        (if (= factor 0)
+            (error "factor is 0")
+            (mul-series s1
+                (scale-stream
+                    (reciprocal-series (scale-stream s2
+                        (/ 1 factor)))
+                    (/ 1 factor))))))
 
-(define def (cons-stream 1
-    (stream-cdr sine-series)))
+(define tan (div-series (scale-stream sine-series 2) (scale-stream cosine-series 2)))
 
-(stream-head (mul-series abc def) 10)
+(stream-head tan 10)
