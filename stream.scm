@@ -166,4 +166,18 @@
     (mul-series cosine-series cosine-series)
     (mul-series sine-series sine-series)))
 
-(stream-head one 1000)
+(define (reciprocal-series s)
+    (define self
+        (cons-stream 1
+            (scale-stream (mul-series
+                self
+                (stream-cdr s))
+                -1)))
+    self)
+
+(define abc (reciprocal-series sine-series))
+
+(define def (cons-stream 1
+    (stream-cdr sine-series)))
+
+(stream-head (mul-series abc def) 10)
