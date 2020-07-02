@@ -187,4 +187,31 @@
 
 (define tan (div-series (scale-stream sine-series 2) (scale-stream cosine-series 2)))
 
-(stream-head tan 10)
+(define (sqrt x tolerance)
+    (stream-limit (sqrt-stream x) tolerance))
+
+(define (sqrt-stream x)
+    (define guesses
+        (cons-stream 1.0 
+            (stream-map
+                (lambda (guess)
+                    (sqrt-improve guess x))
+                guesses)))
+    guesses)
+
+(define (sqrt-improve guess x)
+    (average guess (/ x guess)))
+
+(define (average x y)
+    (/ (+ x y)
+       2))
+
+(define (stream-limit s tolerance)
+    (if 
+        (<
+            (abs (- (stream-car s) (stream-car (stream-cdr s))))
+            tolerance)
+        (stream-car (stream-cdr s))
+        (stream-limit (stream-cdr s) tolerance)))
+
+(sqrt 9 0.0001)
