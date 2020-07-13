@@ -259,5 +259,10 @@
                 (stream-cdr (pairs t u)))
             (triples (stream-cdr s) (stream-cdr t) (stream-cdr u)))))
 
-(define abc (triples integers integers integers))
-(stream-head abc 128)
+(define pythagoras (stream-filter 
+    (lambda (lst) (= 
+        (+ (square (car lst)) (square (cadr lst))) 
+        (square (caddr lst))))
+    (triples integers integers integers)))
+
+(display-stream pythagoras)
