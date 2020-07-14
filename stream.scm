@@ -259,12 +259,6 @@
                 (stream-cdr (pairs t u)))
             (triples (stream-cdr s) (stream-cdr t) (stream-cdr u)))))
 
-(define pythagoras (stream-filter 
-    (lambda (lst) (= 
-        (+ (square (car lst)) (square (cadr lst))) 
-        (square (caddr lst))))
-    (triples integers integers integers)))
-
 (define (merge-weighted s1 s2 proc)
     (cond 
         ((stream-null? s1) s2)
@@ -296,23 +290,47 @@
 
 (define (def a b)
     (define (cal lst)
-        (define (remain c)
-            (or 
-                (= (remainder c 2) 0)
-                (= (remainder c 3) 0)
-                (= (remainder c 5) 0)))
-
         (let ((i (car lst)) (j (cadr lst)))
-            (if (or (remain i) (remain j))
-                (+ (* 2 i) (* 3 j) (* 5 i j))
-                0)))
+            (+ (* 2 i) (* 3 j) (* 5 i j))))
 
     (let ((sum1 (cal a)) (sum2 (cal b)))
         (cond
-            ((and (= sum1 0) (= sum2 0)) 0)
-            ((= sum1 0) 1)
-            ((= sum2 0) -1)
             ((< sum1 sum2) -1)
             (else 1))))
 
-(stream-head (weighted-pairs integers integers abc) 128)
+; (stream-head 
+;     (stream-filter
+;         (lambda (lst)
+;             (define (remain c)
+;                 (or 
+;                     (= (remainder c 2) 0)
+;                     (= (remainder c 3) 0)
+;                     (= (remainder c 5) 0)))
+;             (or (remain (car lst)) (remain (cadr lst))))
+;         (weighted-pairs integers integers def))
+;     128)
+
+(define (weighted-triples s t u proc1 proc2)
+    (cons-stream (list (stream-car s) (stream-car t) (stream-car u))
+        (merge-weighted 
+            (stream-map
+                (lambda (x) (cons (stream-car s) x))
+                (stream-cdr (weighted-pairs t u proc2)))
+            (weighted-triples (stream-cdr s) (stream-cdr t) (stream-cdr u) proc1 proc2)
+            proc1)))
+
+(define pythagoras (stream-filter 
+    (lambda (lst) (= 
+        (+ (square (car lst)) (square (cadr lst))) 
+        (square (caddr lst))))
+    (weighted-triples
+        integers
+        integers
+        integers
+        (lambda (a b)
+            (if (< (+ (car a) (cadr a) (caddr a)) (+ (car b) (cadr b) (caddr b)))
+                -1
+                1))
+        abc)))
+
+(display-stream pythagoras)
