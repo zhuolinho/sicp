@@ -268,7 +268,7 @@
                 (cond
                     ((< weight 0)
                         (cons-stream s1car (merge-weighted (stream-cdr s1) s2 proc)))
-                    ((> (proc s1car s2car) 0)
+                    ((> weight 0)
                         (cons-stream s2car (merge-weighted s1 (stream-cdr s2) proc)))
                     (else (cons-stream s1car
                         (merge-weighted (stream-cdr s1) (stream-cdr s2) proc)))))))))
@@ -323,14 +323,22 @@
     (lambda (lst) (= 
         (+ (square (car lst)) (square (cadr lst))) 
         (square (caddr lst))))
-    (weighted-triples
-        integers
-        integers
-        integers
+    (weighted-triples integers integers integers
         (lambda (a b)
             (if (< (+ (car a) (cadr a) (caddr a)) (+ (car b) (cadr b) (caddr b)))
                 -1
                 1))
         abc)))
 
-(display-stream pythagoras)
+; (display-stream pythagoras)
+
+(define ramanujan (weighted-pairs integers integers (lambda (a b)
+    (let ((sum1 (+ (cube (car a)) (cube (cadr a)))) (sum2 (+ (cube (car b)) (cube (cadr b)))))
+        (cond 
+            ((< sum1 sum2) -1)
+            ((> sum1 sum2) 1)
+            (else
+                (display-line sum1)
+                0))))))
+
+(stream-for-each (lambda (x) #f) ramanujan)
