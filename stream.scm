@@ -332,13 +332,45 @@
 
 ; (display-stream pythagoras)
 
+(define (cube-sum lst)
+    (+ (cube (car lst)) (cube (cadr lst))))
+
 (define ramanujan (weighted-pairs integers integers (lambda (a b)
-    (let ((sum1 (+ (cube (car a)) (cube (cadr a)))) (sum2 (+ (cube (car b)) (cube (cadr b)))))
+    (let ((sum1 (cube-sum a)) (sum2 (cube-sum b)))
         (cond 
             ((< sum1 sum2) -1)
-            ((> sum1 sum2) 1)
-            (else
-                (display-line sum1)
-                0))))))
+            (else 1))))))
 
-(stream-for-each (lambda (x) #f) ramanujan)
+; (stream-for-each (lambda (x) #f) ramanujan)
+
+(define (square-sum lst)
+    (+ (square (car lst)) (square (cadr lst))))
+
+(define trico (weighted-pairs integers integers (lambda (a b)
+    (if (< (square-sum a) (square-sum b))
+        -1
+        1))))
+
+(define (stream-each proc s)
+    (if (stream-null? s)
+        'done
+        (begin
+            (proc s)
+            (stream-each proc (stream-cdr s)))))
+
+; (stream-each
+;     (lambda (s)
+;         (if (= (square-sum (stream-car s)) (square-sum (stream-car (stream-cdr s))) (square-sum (stream-car (stream-cdr (stream-cdr s)))))
+;             (begin
+;                 (display-line (stream-car s))
+;                 (display (stream-car (stream-cdr s)))
+;                 (display (stream-car (stream-cdr (stream-cdr s)))))
+;             #f))
+;     trico)
+
+(stream-each
+    (lambda (s) 
+        (if (= (cube-sum (stream-car s)) (cube-sum (stream-car (stream-cdr s))))
+            (display-line (cube-sum (stream-car s)))
+            #f))
+    ramanujan)
