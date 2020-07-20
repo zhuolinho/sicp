@@ -376,12 +376,15 @@
 ;     ramanujan)
 
 (define (integral delayed-integrand initial-value dt)
-    (define int (cons-stream initial-value
+    (cons-stream initial-value
         (let ((integrand (force delayed-integrand)))
-            (add-streams
-                (scale-stream integrand dt)
-                int))))
-    int)
+            (if (stream-null? integrand)
+                the-empty-stream
+                (integral (delay (stream-cdr integrand))
+                    (+
+                        (* dt (stream-car integrand))
+                        initial-value)
+                    dt)))))
 
 (define (solve f y0 dt)
     (define y (integral (delay dy) y0 dt))
