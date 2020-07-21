@@ -397,4 +397,21 @@
     (define ddy (stream-map f dy y))
     y)
 
-(stream-ref (solve-2nd (lambda (a b) (+ (* -6 a) (* 7 b))) 1 1 0.001) 1000)
+; (stream-ref (solve-2nd (lambda (a b) (+ (* -6 a) (* 7 b))) 1 1 0.001) 1000)
+
+(define (integral integrand initial-value dt)
+    (define int (cons-stream initial-value
+        (add-streams
+            (scale-stream integrand dt)
+            int)))
+    int)
+
+(define (RC R C dt)
+    (lambda (i v0) 
+        (add-streams
+            (scale-stream i R)
+            (integral (scale-stream i (/ 1 C)) v0 dt))))
+
+(define RC1 (RC 5 1 0.5))
+
+(stream-ref (RC1 integers 1) 10)
