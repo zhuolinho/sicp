@@ -429,4 +429,10 @@
 
 (define RC2 (RLC 1 0.2 1 0.1))
 
-(stream-ref (cdr (RC2 10 0)) 10)
+(define (rand-update seed)
+    (remainder (+ (* seed 9301) 49297) 233280))
+
+(define random-numbers
+    (cons-stream 0
+        (stream-map rand-update random-numbers)))
+
