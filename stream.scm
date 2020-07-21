@@ -375,6 +375,23 @@
 ;             #f))
 ;     ramanujan)
 
+; (define (integral integrand initial-value dt)
+;     (define int (cons-stream initial-value
+;         (add-streams
+;             (scale-stream integrand dt)
+;             int)))
+;     int)
+
+; (define (RC R C dt)
+;     (lambda (i v0) 
+;         (add-streams
+;             (scale-stream i R)
+;             (integral (scale-stream i (/ 1 C)) v0 dt))))
+
+; (define RC1 (RC 5 1 0.5))
+
+; (stream-ref (RC1 integers 1) 10)
+
 (define (integral delayed-integrand initial-value dt)
     (cons-stream initial-value
         (let ((integrand (force delayed-integrand)))
@@ -399,19 +416,17 @@
 
 ; (stream-ref (solve-2nd (lambda (a b) (+ (* -6 a) (* 7 b))) 1 1 0.001) 1000)
 
-(define (integral integrand initial-value dt)
-    (define int (cons-stream initial-value
-        (add-streams
-            (scale-stream integrand dt)
-            int)))
-    int)
+(define (RLC R C L dt)
+    (lambda (vc0 il0)
+        (define vc (integral (delay dvc) vc0 dt))
+        (define il (integral (delay dil) il0 dt))
+        (define dvc (scale-stream il (/ -1 C)))
+        (define dil (add-streams
+            (scale-stream vc (/ 1 L))
+            (scale-stream il (- (/ R L)))))
 
-(define (RC R C dt)
-    (lambda (i v0) 
-        (add-streams
-            (scale-stream i R)
-            (integral (scale-stream i (/ 1 C)) v0 dt))))
+        (cons vc il)))
 
-(define RC1 (RC 5 1 0.5))
+(define RC2 (RLC 1 0.2 1 0.1))
 
-(stream-ref (RC1 integers 1) 10)
+(stream-ref (cdr (RC2 10 0)) 10)
