@@ -391,4 +391,12 @@
     (define dy (stream-map f y))
     y)
 
-(stream-ref (solve (lambda (y) y) 1 0.001) 1000)
+(define (solve-2nd a b y0 dy0 dt)
+    (define y (integral (delay dy) y0 dt))
+    (define dy (integral (delay ddy) dy0 dt))
+    (define ddy (add-streams
+        (scale-stream dy a)
+        (scale-stream y b)))
+    y)
+
+(stream-ref (solve-2nd 1 1 1 1 0.001) 1000)
